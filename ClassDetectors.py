@@ -5,8 +5,9 @@ import config as cf
 
 class detector:
     def __init__(self, coord_modifier, name, size):
+        self.instance = 'detector'
         self.name = name
-        self.state = False
+        self.state, self.blocked = False, False
         self.coord = [0, 0]
         self.size = size
         self.modifier = coord_modifier
@@ -49,6 +50,11 @@ class detector:
         self.coord[1] = new_coord[1] + self.modifier[1]
         self.hitbox = self.setHitbox()[0]
 
+        self.data['damage'] = 0
+        self.data['repulsion'] = 0
+        self.data['num'] = None
+        self.data['instance'] = None
+
         self.state = False
         self.visual = self.visuals[0]
         self.collide_with = 'nothing'
@@ -59,21 +65,25 @@ class detector:
                     self.state = True
                     self.visual = self.visuals[1]
                     self.collide_with = vr.solids[key].name
-
-        self.data['damage'] = 0
-        self.data['repulsion'] = 0
-        self.data['num'] = None
+                    self.data['colliding'] = 'solid'
+                    self.data['num'] = vr.solids[key].num
+                    self.data['instance'] = vr.solids[key].instance
 
         for key in vr.events.keys():
-            if cf.attacks_type[vr.events[key].type] and vr.events[key].sender != self.name:  # means it's an attack
-                if self.is_colliding(vr.events[key].hitbox):  # Why this test doesn't work ?
+            if cf.attacks_type[vr.events[key].get().type] and vr.events[key].get().sender != self.name:  # means it's an attack
+                if self.is_colliding(vr.events[key].get().hitbox):
                     self.state = True
-                    self.collide_with = cf.attacks_type[vr.events[key].type]
-                    self.collide_with = cf.attacks_type[vr.events[key].type]
-                    self.data['damage'] = vr.events[key].damage
-                    self.data['repulsion'] = vr.events[key].repulsion
-                    self.data['num'] = vr.events[key].num
-
-        self.data['colliding'] = self.collide_with
+                    self.collide_with = vr.events[key].get().type
+                    try:
+                        self.data['damage'] = vr.events[key].get().damage
+                        self.data['repulsion'] = vr.events[key].get().repulsion
+                        self.data['num'] = vr.events[key].get().num
+                        self.data['instance'] = vr.events[key].get().instance
+                        self.data['colliding'] = cf.attacks_type[self.collide_with]
+                    except:
+                        pass
 
         return
+
+    def get(self):
+        return self

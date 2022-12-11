@@ -8,6 +8,7 @@ import ClassSolid
 import ressources as rs
 import config as cf
 import vars as vr
+import ClassEvent as Event
 
 
 def main():
@@ -25,7 +26,6 @@ def main():
     vr.players['player2'] = player2
     blocks = initBlocks(cf.arena)
     elements = [players, blocks]
-
 
     back = rs.backs['back1']
 
@@ -45,14 +45,15 @@ def main():
             if event.type == pygame.MOUSEBUTTONUP:
                 vr.inputs["CLICK"] = True
                 print(pygame.mouse.get_pos())
-                pygame.time.wait(1000)
+                pygame.time.wait(1000)  # freeze the game for 1 s (TO REMOVE)
             else:
                 vr.inputs["CLICK"] = False
 
         # ------------ Main Loop ------------ #
         getInputs()
         Calculation(elements)
-        DisplayUpdate(screen, fps, elements, back)
+        if fps >= cf.nb_fps*0.5:
+            DisplayUpdate(screen, fps, elements, back)
 
     return
 
@@ -63,7 +64,7 @@ def Calculation(elements):
 
     for key in vr.events.keys():
         vr.events[key].update()
-        if vr.events[key].duration < vr.time - vr.events[key].start_time:
+        if vr.events[key].get().duration < vr.time - vr.events[key].get().start_time:
             vr.events_del_keys.append(key)
     for key in vr.events_del_keys:
         try:
@@ -94,7 +95,6 @@ def DisplayUpdate(screen, fps, elements, back):
 
     for elt in elements[0]:
         screen.blit(elt.visual, [elt.getx(), elt.gety()])
-        #Text(elt.name, elt.coord, 12, "red", screen)
         Text(elt.state, elt.coord, 12, "red", screen)
         for detector in elt.detectors:
             screen.blit(detector.visual, detector.coord_draw())
@@ -103,14 +103,14 @@ def DisplayUpdate(screen, fps, elements, back):
 
     for key in vr.events.keys():
         try:
-            screen.blit(vr.events[key].visual, [vr.events[key].getx(), vr.events[key].gety()])
-            draw_hitbox(screen, vr.events[key].hitbox)
-            for detector in vr.events[key].detectors:
+            screen.blit(vr.events[key].get().visual, [vr.events[key].get().getx(), vr.events[key].get().gety()])
+            draw_hitbox(screen, vr.events[key].get().hitbox)
+            for detector in vr.events[key].get().detectors:
                 screen.blit(detector.visual, detector.coord_draw())
         except:
             pass
 
-    Text(("FPS : " + str(fps)), (20, 20), 20, "grey", screen)
+    Text(("FPS : " + str(fps)), (20, 20), 16, "grey", screen)
     pygame.display.update()
     return
 
@@ -141,7 +141,7 @@ def draw_hitbox(screen, hitbox):
     width = hitbox[1][0] - hitbox[0][0]
     pygame.draw.line(screen, "red", hitbox[0], [hitbox[0][0] + width, hitbox[0][1]])
     pygame.draw.line(screen, "red", [hitbox[0][0] + width, hitbox[0][1]], hitbox[1])
-    pygame.draw.line(screen, "red", hitbox[1], [hitbox[1][0] - width, hitbox[1][1]], )
+    pygame.draw.line(screen, "red", hitbox[1], [hitbox[1][0] - width, hitbox[1][1]])
     pygame.draw.line(screen, "red", [hitbox[1][0] - width, hitbox[1][1]], hitbox[0])
     return
 
@@ -223,7 +223,7 @@ def getInputs():
 
 def Text(msg, coord, size, color, screen):  # blit to the screen a text
     TextColor = pygame.Color(color)  # set the color of the text
-    font = pygame.font.Font("/Users/arthur/PycharmProjects/QForAChampion/venv/ressources/miscellaneous/font.ttf", size)  # set the font
+    font = pygame.font.Font("ressources/others/Font.ttf", size)  # set the font
     return screen.blit(font.render(msg, True, TextColor), coord)  # return and blit the text on the screen
 
 

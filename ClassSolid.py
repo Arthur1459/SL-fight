@@ -2,6 +2,7 @@
 
 class Block:
     def __init__(self, pt1, pt2, name, num):
+        self.instance = 'solid'
         self.name = name
         self.num = num
         self.topleft = [pt1[0], pt1[1]]

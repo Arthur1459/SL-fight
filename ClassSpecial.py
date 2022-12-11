@@ -6,6 +6,7 @@ import vars as vr
 
 class special_skill:
     def __init__(self, sender, type, damage, coordi, speedi, duration, width, effects, num):
+        self.instance = 'special'
         self.sender = sender
         self.type = type
         self.damage = damage
@@ -75,4 +76,5 @@ class special_skill:
             for detector in self.detectors:
                 detector.update(self.coord)
 
-        #vr.events[str(self.num)] = self
+    def get(self):
+        return self

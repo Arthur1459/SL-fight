@@ -1,7 +1,7 @@
 import pygame.display
 
 # --- Constant --- #
-nb_fps = 50
+nb_fps = 60
 size_player = [48, 86]
 g = 1
 
@@ -20,11 +20,11 @@ players_inputs = {'1': {'right': "RIGHT", 'left': "LEFT", 'up': "UP", 'down': "D
 # 'projectile' : [type, damage, reloading, speed, duration, width, special]
 # 'melee' = [type, damage, reloading, duration, dimension, special]
 # special
-hero_try_skills = {'acceleration': 4, 'maxspeed': 18, 'jump': 18, 'walljump': [18, 18, 2], 'doublejump': 1, 'health': [100, 100], 'attack_1': ['kick', 10, 0.4, 0.2, [size_player[0]//(2/3), size_player[1]//4], {}]}
+hero_try_skills = {'acceleration': 4, 'maxspeed': 18, 'jump': 18, 'walljump': [18, 18, 2], 'doublejump': 1, 'health': [100, 100], 'attack_1': {'name': 'kick', 'damage': 10, 'killable': [], 'reload': 0.4, 'duration': 0.2, 'size': [size_player[0]//(2/3), size_player[1]//4], 'special': {}}}
 
-arcane_mage_skills = {'acceleration': 2,'maxspeed': 18, 'jump': 14, 'walljump': [14, 14, 1], 'doublejump': 2, 'health': [150, 200], 'attack_1': ['spell', 20, 1, 6, 4, 48, {'bounce': True, 'explode': False}]}
+arcane_mage_skills = {'acceleration': 2,'maxspeed': 18, 'jump': 14, 'walljump': [14, 14, 1], 'doublejump': 2, 'health': [150, 200], 'attack_1': {'name': 'spell', 'damage': 20, 'killable': ['player'], 'reload': 1, 'duration': 6, 'speed': 4, 'rng': 1, 'size': 48, 'special': {'bounce': True, 'explode': False}}}
 
-tit2_skills = {'acceleration': 5, 'maxspeed': 16, 'jump': 20, 'walljump': [14, 20, 2], 'doublejump': 1, 'health': [100, 100], 'attack_1': ['kick', 10, 0.8, 0.4, {'side': [size_player[0]//(2/3), size_player[0]//3], 'down': [size_player[0]//(2/3), size_player[0]*5/4], 'up': [size_player[0]*1.2, size_player[0]//3]}, {}],'special': {}}
+tit2_skills = {'acceleration': 5, 'maxspeed': 16, 'jump': 20, 'walljump': [14, 20, 2], 'doublejump': 1, 'health': [100, 100], 'attack_1': {'name': 'kick', 'damage': 10, 'killable': [], 'reload': 0.8, 'duration':  0.4, 'size': {'side': [size_player[0]//(2/3), size_player[0]//3], 'down': [size_player[0]//(2/3), size_player[0]*5/4], 'up': [size_player[0]*1.2, size_player[0]//3]}, 'special': {}}}
 
 heroes_skills = {'hero_try': hero_try_skills, 'arcane_mage': arcane_mage_skills, 'tit2': tit2_skills}
 

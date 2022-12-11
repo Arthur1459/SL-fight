@@ -2,15 +2,17 @@ import pygame.transform, pygame.time
 import ressources as rs
 import ClassDetectors
 import vars as vr
+from random import randint
 
 class projectile:
-    def __init__(self, sender, type, damage, coordi, speedi, duration, width, special, num):
+    def __init__(self, sender, type, damage, coordi, speedi, rng, duration, width, special, num):
+        self.instance = 'projectile'
         self.sender = sender
         self.type = type
         self.damage = damage
         self.duration = duration * 1000
         self.start_time = vr.time
-        self.speed = speedi
+        self.speed = [speedi[0] + randint(-rng, rng), speedi[1] + randint(-rng, rng)]
         self.coord = [coordi[0], coordi[1]]
         self.width = width
         self.hitbox = [[self.coord[0] - self.width // 2, self.coord[1] - self.width // 2],
@@ -59,7 +61,6 @@ class projectile:
                 pass
 
         if self.bounce:
-
             if (self.detectors[0].state or self.detectors[2].state) and (self.detectors[0].collide_with == 'wall' or self.detectors[2].collide_with == 'wall'):
                 self.speed[0] = -self.speed[0]
             if (self.detectors[1].state or self.detectors[3].state) and (self.detectors[1].collide_with == 'wall' or self.detectors[3].collide_with == 'wall'):
@@ -73,4 +74,5 @@ class projectile:
             for detector in self.detectors:
                 detector.update(self.coord)
 
-        #vr.events[str(self.num)] = self
+    def get(self):
+        return self
