@@ -4,6 +4,7 @@ import pygame.display
 nb_fps = 60
 size_player = [48, 86]
 g = 1
+jump_duration = 0.3
 
 # --- Pygame --- #
 pygame.display.init()

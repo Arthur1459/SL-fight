@@ -25,7 +25,7 @@ class Player:
         self.inputs = cf.players_inputs[player_n]
         self.detectors, self.already_taken = self.initDetectors(), []
         self.skills = cf.heroes_skills[self.name]
-        self.current_walljumps, self.current_doublejumps, self.current_attack_base = 0, 0, 0
+        self.current_walljumps, self.current_doublejumps, self.current_attack_base, self.jump_time, self.up_remember = 0, 0, 0, 0, False
         self.num, self.last_time = vr.solid_num, vr.time
         vr.solids[self.num] = ClassSolid.Block(self.hitbox[0], self.hitbox[1], self.name, self.num)
         vr.solid_num += 1
@@ -242,13 +242,15 @@ class Player:
             elif vr.inputs[self.inputs['left']] and self.speed[0] > -self.skills['maxspeed']:
                 self.speed[0] += -self.skills['acceleration']
 
-            elif vr.inputs[self.inputs['up']] and (self.detectors[1].state is True or (self.current_doublejumps < self.skills['doublejump'] and -4 < self.speed[1] <= cf.max_vspeed)):
+            elif (vr.inputs[self.inputs['up']] and not(self.up_remember)) and (self.detectors[1].state is True or (self.current_doublejumps < self.skills['doublejump'] and vr.time - self.jump_time > (cf.jump_duration * 1000))):
                 self.speed[1] = -self.skills['jump']
+                self.jump_time = vr.time
                 if self.detectors[1].state is False:
                     self.current_doublejumps += 1
+            self.up_remember = vr.inputs[self.inputs['up']]
 
-            if (vr.inputs[self.inputs['down']]) and self.detectors[1].state is False:
-                self.speed[1] = self.skills['jump']*1  # Modifier speed vertical when down
+            if (vr.inputs[self.inputs['down']]) and (self.detectors[1].state is False) and(self.speed[1]>=0):
+                self.speed[1] = self.skills['jump']*1.5  # Modifier speed vertical when down
                 self.orient[0] = 0
                 self.orient[1] = 1
 
