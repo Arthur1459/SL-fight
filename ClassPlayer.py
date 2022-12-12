@@ -209,8 +209,6 @@ class Player:
         if self.attack_time > 0:
             self.attack_time = self.attack_time - (vr.time - self.last_time)
 
-        self.last_time = vr.time
-
         # -- Gravity -- #
         if self.detectors[1].state is False and self.speed[1] < cf.max_vspeed:
             self.speed[1] += cf.g
@@ -230,7 +228,6 @@ class Player:
         if self.detectors[1].state is True:
             self.current_walljumps, self.current_doublejumps = 0, 0
 
-
         # a faire -> V horizontale aérienne / terrestre
         if self.attack_time <= 0:
             if vr.inputs[self.inputs['up']] and vr.inputs[self.inputs['right']] and self.detectors[0].state is True and self.current_walljumps < self.skills['walljump'][2]:
@@ -245,13 +242,13 @@ class Player:
             elif vr.inputs[self.inputs['left']] and self.speed[0] > -self.skills['maxspeed']:
                 self.speed[0] += -self.skills['acceleration']
 
-            elif vr.inputs[self.inputs['up']] and (self.detectors[1].state is True or (self.current_doublejumps < self.skills['doublejump'] and 0 < self.speed[1] < self.skills['maxspeed'])):
+            elif vr.inputs[self.inputs['up']] and (self.detectors[1].state is True or (self.current_doublejumps < self.skills['doublejump'] and -4 < self.speed[1] <= cf.max_vspeed)):
                 self.speed[1] = -self.skills['jump']
                 if self.detectors[1].state is False:
                     self.current_doublejumps += 1
 
             if (vr.inputs[self.inputs['down']]) and self.detectors[1].state is False:
-                self.speed[1] = self.skills['jump']//1.5
+                self.speed[1] = self.skills['jump']*1  # Modifier speed vertical when down
                 self.orient[0] = 0
                 self.orient[1] = 1
 
