@@ -1,5 +1,5 @@
 # SL-Fight main program
-# V0.1 - 02/12/22
+# V0.2 - 12/12/22
 
 import pygame
 import random as rd
