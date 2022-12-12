@@ -24,7 +24,7 @@ class Player:
         self.hitbox = [[self.coord[0] - self.getwidth()//2, self.coord[0] - self.getheight()//2], [self.coord[0] + self.getwidth()//2, self.coord[0] + self.getheight()//2]]
         self.inputs = cf.players_inputs[player_n]
         self.detectors, self.already_taken = self.initDetectors(), []
-        self.skills = cf.heroes_skills[self.name]
+        self.skills, self.mass = cf.heroes_skills[self.name], cf.heroes_skills[self.name]['mass']
         self.current_walljumps, self.current_doublejumps, self.current_attack_base, self.jump_time, self.up_remember = 0, 0, 0, 0, False
         self.num, self.last_time = vr.solid_num, vr.time
         vr.solids[self.num] = ClassSolid.Block(self.hitbox[0], self.hitbox[1], self.name, self.num)
@@ -91,7 +91,7 @@ class Player:
 
     def updatevisual(self):
         try:
-            if self.state == 'attack_1':  # if visuals depend of the up/down orientation
+            if self.state == 'attack_1':  # if visuals depends on the up/down orientation
                 self.len_phase = len((rs.hero_visuals[self.name])[self.state][self.attack_orient])
                 if vr.time - self.start_phase > 200:
                     self.current_phase += 1
@@ -119,7 +119,7 @@ class Player:
                 else:
                     self.visual = pygame.transform.flip((rs.hero_visuals[self.name])[self.state][self.current_phase], True, False)
 
-            elif self.attack_time <= 0: # if visuals are not depending of the orientation
+            elif self.attack_time <= 0:  # if visuals don't depend on the orientation
                 if self.orient[0] >= 0:
                     self.visual = (rs.hero_visuals[self.name])[self.state][0]
                 else:
@@ -130,23 +130,23 @@ class Player:
 
     def updatepos(self):
         if self.attack_time <= 0:
+            if vr.inputs[self.inputs['up']]:
+                self.orient[1] = -1
+                self.orient[0] = 0
+            if vr.inputs[self.inputs['down']]:
+                self.orient[1] = 1
+                self.orient[0] = 0
             if vr.inputs[self.inputs['right']]:
                 self.orient[0] = 1
                 self.orient[1] = 0
             if vr.inputs[self.inputs['left']]:
                 self.orient[0] = -1
                 self.orient[1] = 0
-            if vr.inputs[self.inputs['up']]:
-                self.orient[1] = -1
-                if not(vr.inputs[self.inputs['right']] and vr.inputs[self.inputs['left']]):
-                    self.orient[0] = 0
-            if vr.inputs[self.inputs['down']]:
-                self.orient[1] = 1
 
         self.coord[0], self.coord[1] = self.coord[0] + self.speed[0], self.coord[1] + self.speed[1]
         self.hitbox = [[self.coord[0] - self.getwidth()//2, self.coord[1] - self.getheight()//2], [self.coord[0] + self.getwidth()//2, self.coord[1] + self.getheight()//2]]
 
-        if not(0 < self.getx() < cf.screenx) or not(0 < self.gety() < cf.screeny): # out of screen
+        if not(0 < self.getx() < cf.screenx) or not(0 < self.gety() < cf.screeny):  # out of screen
             print("\nERROR Coordinate of", self.name, "unexpected.\n")
             self.coord = [200, 200]
         vr.solids[self.num] = ClassSolid.Block(self.hitbox[0], self.hitbox[1], self.name, self.num)
@@ -187,6 +187,7 @@ class Player:
         else:
             return 0
 
+    # ------ UPDATE ----- #
     def update(self):
         # -- Events interaction -- #
         for detector in self.detectors:
@@ -210,66 +211,90 @@ class Player:
             self.attack_time = self.attack_time - (vr.time - self.last_time)
 
         # -- Gravity -- #
-        if self.detectors[1].state is False and self.speed[1] < cf.max_vspeed:
-            self.speed[1] += cf.g
-        elif self.detectors[1].state is True:
+        if self.detectors[1].blocked is False and self.speed[1] < cf.max_vspeed:
+            self.speed[1] += cf.g*self.mass
+        elif self.detectors[1].blocked is True and self.speed[1] > 0:
             self.speed[1] = 0
-            if self.detectors[5].state is True:
+            if self.detectors[5].blocked is True:
                 self.speed[1] = -2
 
-        if -self.skills['acceleration'] < self.speed[0] < self.skills['acceleration'] and self.speed[0] != 0:
+        if -self.skills['acceleration']//2 <= self.speed[0] <= self.skills['acceleration']//2 and self.speed[0] != 0:
             self.speed[0] = 0
-        elif self.speed[0] < 0 and vr.inputs[self.inputs['left']] is False:
-            self.speed[0] += self.skills['acceleration']
-        elif self.speed[0] > 0 and vr.inputs[self.inputs['right']] is False:
-            self.speed[0] += -self.skills['acceleration']
+        if self.speed[0] < 0 and vr.inputs[self.inputs['left']] is False:
+            self.speed[0] += self.skills['acceleration']//2
+        if self.speed[0] > 0 and vr.inputs[self.inputs['right']] is False:
+            self.speed[0] += -self.skills['acceleration']//2
 
         # -- Inputs -- #
-        if self.detectors[1].state is True:
+        if self.detectors[1].blocked is True:
             self.current_walljumps, self.current_doublejumps = 0, 0
 
-        # a faire -> V horizontale aérienne / terrestre
-        if self.attack_time <= 0:
-            if vr.inputs[self.inputs['up']] and vr.inputs[self.inputs['right']] and self.detectors[0].state is True and self.current_walljumps < self.skills['walljump'][2]:
+        # a faire -> V  air / ground
+        if self.attack_time <= 0 or self.detectors[1].blocked is False:   # if he is not attacking or in the air
+
+            # Wall jumps
+            if vr.inputs[self.inputs['up']] and vr.inputs[self.inputs['right']] and self.detectors[0].blocked is True and self.current_walljumps < self.skills['walljump'][2]:
                 self.speed = [-self.skills['walljump'][0], -self.skills['walljump'][1]]
                 self.current_walljumps += 1
-            elif vr.inputs[self.inputs['up']] and vr.inputs[self.inputs['left']] and self.detectors[2].state is True and self.current_walljumps < self.skills['walljump'][2]:
+            if vr.inputs[self.inputs['up']] and vr.inputs[self.inputs['left']] and self.detectors[2].blocked is True and self.current_walljumps < self.skills['walljump'][2]:
                 self.speed = [self.skills['walljump'][0], -self.skills['walljump'][1]]
                 self.current_walljumps += 1
 
-            elif vr.inputs[self.inputs['right']] and self.speed[0] < self.skills['maxspeed']:
-                self.speed[0] += self.skills['acceleration']
-            elif vr.inputs[self.inputs['left']] and self.speed[0] > -self.skills['maxspeed']:
-                self.speed[0] += -self.skills['acceleration']
+            # Side
+            if vr.inputs[self.inputs['right']] and not self.detectors[0].blocked:   # go right
+                if self.isInTheAir():
+                    if self.speed[0] <= self.skills['maxspeed'][1]:
+                        self.speed[0] += self.skills['acceleration']
+                    if self.speed[0] > self.skills['maxspeed'][1]:
+                        self.speed[0] += int(-(cf.air_resistance/self.mass + 1))
 
-            elif (vr.inputs[self.inputs['up']] and not(self.up_remember)) and (self.detectors[1].state is True or (self.current_doublejumps < self.skills['doublejump'] and vr.time - self.jump_time > (cf.jump_duration * 1000))):
+                else:
+                    if self.speed[0] < self.skills['maxspeed'][0]:
+                        self.speed[0] += self.skills['acceleration']
+            if vr.inputs[self.inputs['left']] and not self.detectors[2].blocked:  # go left
+                if self.isInTheAir():
+                    if self.speed[0] >= -self.skills['maxspeed'][1]:
+                        self.speed[0] += -self.skills['acceleration']
+                    if self.speed[0] < -self.skills['maxspeed'][1]:
+                        self.speed[0] += int(cf.air_resistance/self.mass + 1)
+                else:
+                    if self.speed[0] > -self.skills['maxspeed'][0]:
+                        self.speed[0] += -self.skills['acceleration']
+
+            # Jumps
+            if (vr.inputs[self.inputs['up']] and not self.up_remember) and (self.detectors[1].blocked is True or (self.current_doublejumps < self.skills['doublejump'] and vr.time - self.jump_time > (cf.jump_duration * 1000))):
                 self.speed[1] = -self.skills['jump']
                 self.jump_time = vr.time
-                if self.detectors[1].state is False:
+                if self.detectors[1].blocked is False:
                     self.current_doublejumps += 1
             self.up_remember = vr.inputs[self.inputs['up']]
 
-            if (vr.inputs[self.inputs['down']]) and (self.detectors[1].state is False) and(self.speed[1]>=0):
+            # Down
+            if (vr.inputs[self.inputs['down']]) and (self.detectors[1].blocked is False) and(self.speed[1]>=0):
                 self.speed[1] = self.skills['jump']*1.5  # Modifier speed vertical when down
-                self.orient[0] = 0
-                self.orient[1] = 1
+            elif vr.inputs[self.inputs['down']] and self.detectors[1].blocked:
+                self.speed[1] = 0
 
         # -- verification -- #
-        if self.detectors[0].state is True and self.speed[0] > 0:
+        if self.detectors[0].blocked is True and self.speed[0] > 0:
             self.speed[0] = 0
-            if self.detectors[4].state is True:
-                self.speed[0] = -3
-        if self.detectors[2].state is True and self.speed[0] < 0:
+        if self.detectors[4].blocked is True:
+            self.coord[0] += -3
+        if self.detectors[2].blocked is True and self.speed[0] < 0:
             self.speed[0] = 0
-            if self.detectors[6].state is True:
-                self.speed[0] = 3
-        if self.detectors[3].state is True and self.speed[1] < 0:
+        if self.detectors[6].blocked is True:
+            self.coord[0] += 3
+        if self.detectors[3].blocked is True and self.speed[1] < 0:
             self.speed[1] = 0
-            if self.detectors[7].state is True:
-                self.speed[1] = 3
+        if self.detectors[7].blocked is True:
+            self.coord[1] += 3
+        if self.detectors[1].blocked is True and self.speed[1] > 0:
+            self.speed[1] = 0
+        if self.detectors[5].blocked is True:
+            self.coord[1] += -3
 
         # -- animations -- #
-        if self.detectors[1].state is False and self.attack_time <= 0:
+        if self.detectors[1].blocked is False and self.attack_time <= 0:
             self.state = 'jump'
         elif self.speed[0] != 0 and self.attack_time <= 0:
             self.state = 'walk'
@@ -289,3 +314,9 @@ class Player:
 
     def get(self):
         return self
+
+    def isInTheAir(self):
+        if self.detectors[1].blocked is True:
+            return False
+        else:
+            return True

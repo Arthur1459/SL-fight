@@ -4,10 +4,10 @@ import config as cf
 import vars as vr
 
 class melee:
-    def __init__(self, sender, type, damage, coordi, speedi, duration, dimension, special, num, orient):
+    def __init__(self, sender, name, damage, coordi, speedi, duration, dimension, special, num, orient):
         self.instance = 'melee'
         self.sender = sender
-        self.type = type
+        self.name = name
         self.damage = damage
         self.duration = duration * 1000
         self.start_time = vr.time
@@ -21,7 +21,7 @@ class melee:
             self.dimension = [dimension[0], dimension[1]]
         self.hitbox = [[self.coord[0] - self.dimension[0] // 2, self.coord[1] - self.dimension[1] // 2],
                        [self.coord[0] + self.dimension[0] // 2, self.coord[1] + self.dimension[1] // 2]]
-        self.visual = pygame.transform.scale(rs.melee[self.type],
+        self.visual = pygame.transform.scale(rs.melee[self.name],
                                              [min(dimension[0], dimension[1]), min(dimension[0], dimension[1])])
         self.special = special
         self.explode, self.repulsion = False, 0

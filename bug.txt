@@ -1,0 +1,8 @@
+Bug :
+Hitbox detection bug (melee attack down) # FIXED
+Collision, melee attack / projectile detected as solid (detector.state -> no diferences) # FIXED
+
+Fix :
+Input freeze while attacking # FIXED
+Speed air # FIXED
+Detector position/size  # FIXED

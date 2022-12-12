@@ -8,7 +8,7 @@ class projectile:
     def __init__(self, sender, type, damage, coordi, speedi, rng, duration, width, special, num):
         self.instance = 'projectile'
         self.sender = sender
-        self.type = type
+        self.name = type
         self.damage = damage
         self.duration = duration * 1000
         self.start_time = vr.time
@@ -17,7 +17,7 @@ class projectile:
         self.width = width
         self.hitbox = [[self.coord[0] - self.width // 2, self.coord[1] - self.width // 2],
                        [self.coord[0] + self.width // 2, self.coord[1] + self.width // 2]]
-        self.visual = pygame.transform.scale(rs.projectiles[self.type], [width, width])
+        self.visual = pygame.transform.scale(rs.projectiles[self.name], [width, width])
         self.special = special
         self.bounce, self.explode, self.repulsion = False, False, 0
         self.initSpecial()

@@ -1,5 +1,6 @@
 # SL-Fight main program
-# V0.2.1 - 12/12/22
+# By Arthur1459 - Mael205 - Grasboulot
+# V0.3 - 12/12/22
 
 import pygame
 import random as rd
@@ -8,7 +9,7 @@ import ClassSolid
 import ressources as rs
 import config as cf
 import vars as vr
-import ClassEvent as Event
+#from math import sqrt
 
 
 def main():
@@ -95,11 +96,11 @@ def DisplayUpdate(screen, fps, elements, back):
 
     for elt in elements[0]:
         screen.blit(elt.visual, [elt.getx(), elt.gety()])
-        Text(elt.state, elt.coord, 12, "red", screen)
         for detector in elt.detectors:
             screen.blit(detector.visual, detector.coord_draw())
         pygame.draw.line(screen, "grey", elt.getCoordHealthBar()[0], [elt.getCoordHealthBar()[1][0] + elt.size[0], elt.getCoordHealthBar()[1][1]], 3)
         pygame.draw.line(screen, "red", elt.getCoordHealthBar()[0], [elt.getCoordHealthBar()[1][0] + elt.size[0]*((elt.getHealth()[0])/(elt.getHealth()[1])), elt.getCoordHealthBar()[1][1]], 3)
+        Text(str(elt.isInTheAir()), elt.coord, 20, "grey", screen)  # speed str(round(sqrt(elt.speed[0] ** 2 + elt.speed[1] ** 2), 3))
 
     for key in vr.events.keys():
         try:
