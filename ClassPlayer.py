@@ -10,18 +10,19 @@ import ClassEvent as Event
 
 
 class Player:
+    # --- Init --- #
     def __init__(self, name, player_n, coord):
         self.instance = 'player'
         self.name = name
         self.player_n = player_n
         self.coord = [coord[0], coord[1]]
-        self.speed, self.orient, self.attack_orient = [0, 0], [1, 0], 'side'
+        self.speed, self.orient, self.attack_orient, self.last_orient = [0, 0], [1.0, 0.0], 'side', 0
         self.state = 'stand'
         self.last_time = vr.time
         self.start_phase, self.len_phase, self.current_phase, self.attack_time = vr.time, 0, 0, 0
         self.visual = (rs.hero_visuals[self.name])[self.state][0]
-        self.size = self.visual.get_size()  # already with the size of a player
-        self.hitbox = [[self.coord[0] - self.getwidth()//2, self.coord[0] - self.getheight()//2], [self.coord[0] + self.getwidth()//2, self.coord[0] + self.getheight()//2]]
+        self.size = self.visual.get_size()
+        self.hitbox = [[self.coord[0] - self.getwidth_hitbox() // 2, self.coord[0] - self.getheight_hitbox() // 2], [self.coord[0] + self.getwidth_hitbox() // 2, self.coord[0] + self.getheight_hitbox() // 2]]
         self.inputs = cf.players_inputs[player_n]
         self.detectors, self.already_taken = self.initDetectors(), []
         self.skills, self.mass = cf.heroes_skills[self.name], cf.heroes_skills[self.name]['mass']
@@ -32,16 +33,25 @@ class Player:
         return
 
     def getx(self):  # return the coord visualised
-        return self.coord[0] - self.getwidth()//2
+        return self.coord[0] - self.getwidth_hitbox() // 2
 
     def gety(self):
-        return self.coord[1] - self.getheight()//2
+        return self.coord[1] - self.getheight_hitbox() // 2
 
-    def getwidth(self):
+    def getwidth_hitbox(self):
         return self.size[0]
 
-    def getheight(self):
+    def getheight_hitbox(self):
         return self.size[1]
+
+    def getsize_visual(self):
+        return self.visual.get_size()
+
+    def getcoord_visual(self):
+        size = self.getsize_visual()
+        x = self.getx() - (size[0] - self.getwidth_hitbox())/2
+        y = self.gety() - (size[1] - self.getheight_hitbox())/2
+        return [x, y]
 
     def getHealth(self):
         return self.skills['health']
@@ -50,18 +60,18 @@ class Player:
         return [[self.getx(), self.gety() - 10], [self.getx(), self.gety() - 10]]
 
     def initDetectors(self):
-        detectors = [ClassDetectors.detector([self.getwidth() // 2, 0], self.name, cf.size_player),
-                     ClassDetectors.detector([0, self.getheight() // 2], self.name, cf.size_player),
-                     ClassDetectors.detector([-self.getwidth() // 2, 0], self.name, cf.size_player),
-                     ClassDetectors.detector([0, -self.getheight() // 2], self.name, cf.size_player),
-                     ClassDetectors.detector([self.getwidth() // 2.2, 0], self.name, cf.size_player),
-                     ClassDetectors.detector([0, self.getheight() // 2.2], self.name, cf.size_player),
-                     ClassDetectors.detector([-self.getwidth() // 2.2, 0], self.name, cf.size_player),
-                     ClassDetectors.detector([0, -self.getheight() // 2.2], self.name, cf.size_player)]
+        detectors = [ClassDetectors.detector([self.getwidth_hitbox() // 2, 0], self.name, cf.size_player),
+                     ClassDetectors.detector([0, self.getheight_hitbox() // 2], self.name, cf.size_player),
+                     ClassDetectors.detector([-self.getwidth_hitbox() // 2, 0], self.name, cf.size_player),
+                     ClassDetectors.detector([0, -self.getheight_hitbox() // 2], self.name, cf.size_player),
+                     ClassDetectors.detector([self.getwidth_hitbox() // 2.3, 0], self.name, cf.size_player),
+                     ClassDetectors.detector([0, self.getheight_hitbox() // 2.3], self.name, cf.size_player),
+                     ClassDetectors.detector([-self.getwidth_hitbox() // 2.3, 0], self.name, cf.size_player),
+                     ClassDetectors.detector([0, -self.getheight_hitbox() // 2.3], self.name, cf.size_player)]
         return detectors
 
     def get_state(self):
-        states=[]
+        states = []
         if vr.inputs[self.inputs['attack_1']] and self.current_attack_base <= 0:
             states.append('attack_1')
         if self.skills['health'][0] <= 0:
@@ -93,11 +103,11 @@ class Player:
         try:
             if self.state == 'attack_1':  # if visuals depends on the up/down orientation
                 self.len_phase = len((rs.hero_visuals[self.name])[self.state][self.attack_orient])
-                if vr.time - self.start_phase > 200:
-                    self.current_phase += 1
-                    self.start_phase = vr.time
                 if self.current_phase >= self.len_phase:
                     self.current_phase = 0
+                elif vr.time - self.start_phase > 200:
+                    self.current_phase += 1
+                    self.start_phase = vr.time
 
                 if self.orient[0] >= 0:
                     self.visual = (rs.hero_visuals[self.name])[self.state][self.attack_orient][self.current_phase]
@@ -105,7 +115,7 @@ class Player:
                 else:
                     self.visual = pygame.transform.flip((rs.hero_visuals[self.name])[self.state][self.attack_orient][self.current_phase], True, False)
 
-            elif self.state == 'walk' and self.attack_time <= 0: # if the visuals depends only of the right/left orientation
+            elif self.state == 'walk' and self.attack_time <= 0:  # if the visuals depends only of the right/left orientation
                 self.len_phase = len((rs.hero_visuals[self.name])[self.state])
                 if vr.time - self.start_phase > 200:
                     self.current_phase += 1
@@ -130,28 +140,47 @@ class Player:
 
     def updatepos(self):
         if self.attack_time <= 0:
-            if vr.inputs[self.inputs['up']]:
-                self.orient[1] = -1
-                self.orient[0] = 0
-            if vr.inputs[self.inputs['down']]:
-                self.orient[1] = 1
-                self.orient[0] = 0
+            # --- orientation --- #
+            self.orient[1] = 0.0
+            self.orient[0] = self.last_orient
             if vr.inputs[self.inputs['right']]:
-                self.orient[0] = 1
-                self.orient[1] = 0
-            if vr.inputs[self.inputs['left']]:
-                self.orient[0] = -1
-                self.orient[1] = 0
+                self.orient[0] = 1.0
+                self.last_orient = 1.0
+                self.orient[1] = 0.0
+            elif vr.inputs[self.inputs['left']]:
+                self.orient[0] = -1.0
+                self.last_orient = -1.0
+                self.orient[1] = 0.0
+            if vr.inputs[self.inputs['up']]:
+                self.orient[1] = -1.0
+                if not (vr.inputs[self.inputs['right']] or vr.inputs[self.inputs['left']]):
+                    self.orient[0] = 0.0
+                    self.last_orient = 0.0
+            elif vr.inputs[self.inputs['down']] and self.isInTheAir():
+                self.orient[1] = 1.0
+                if not (vr.inputs[self.inputs['right']] or vr.inputs[self.inputs['left']]):
+                    self.orient[0] = 0.0
+                    self.last_orient = 0.0
+            elif vr.inputs[self.inputs['down']]:
+                self.orient[1] = 0.5
+        elif self.orient[0] == 0.0 and not self.isInTheAir():
+            self.orient[0] = 1.0
 
+        # --- new coord / hitbox --- #
         self.coord[0], self.coord[1] = self.coord[0] + self.speed[0], self.coord[1] + self.speed[1]
-        self.hitbox = [[self.coord[0] - self.getwidth()//2, self.coord[1] - self.getheight()//2], [self.coord[0] + self.getwidth()//2, self.coord[1] + self.getheight()//2]]
+        self.hitbox = [[self.coord[0] - self.getwidth_hitbox() // 2, self.coord[1] - self.getheight_hitbox() // 2], [self.coord[0] + self.getwidth_hitbox() // 2, self.coord[1] + self.getheight_hitbox() // 2]]
 
+        # --- verification --- #
         if not(0 < self.getx() < cf.screenx) or not(0 < self.gety() < cf.screeny):  # out of screen
             print("\nERROR Coordinate of", self.name, "unexpected.\n")
             self.coord = [200, 200]
+
+        # --- update solid hitbox --- #
         vr.solids[self.num] = ClassSolid.Block(self.hitbox[0], self.hitbox[1], self.name, self.num)
+        return
 
     def attack(self, attack, type_attack):
+        self.current_phase = -1
         if type_attack == 'base':
             if self.current_attack_base <= 0:
                 self.current_attack_base = self.skills[attack]['reload'] * 1000  # reloading time
@@ -173,11 +202,9 @@ class Player:
 
     def setAttackOrient(self):
         self.attack_orient = 'side'
-        if abs(self.speed[0]) >= abs(self.speed[1]):
-            self.attack_orient = 'side'
-        elif self.speed[1] > 0:
+        if vr.inputs[self.inputs['down']] and self.isInTheAir():
             self.attack_orient = 'down'
-        elif self.speed[1] < 0:
+        elif vr.inputs[self.inputs['up']]:
             self.attack_orient = 'up'
         return
 
@@ -267,31 +294,39 @@ class Player:
                 self.jump_time = vr.time
                 if self.detectors[1].blocked is False:
                     self.current_doublejumps += 1
-            self.up_remember = vr.inputs[self.inputs['up']]
 
             # Down
-            if (vr.inputs[self.inputs['down']]) and (self.detectors[1].blocked is False) and(self.speed[1]>=0):
-                self.speed[1] = self.skills['jump']*1.5  # Modifier speed vertical when down
+            elif (vr.inputs[self.inputs['down']]) and (self.detectors[1].blocked is False) and (self.speed[1] >= -self.skills['maxspeed'][1]//2):
+                if self.speed[1] < self.skills['jump']*self.skills['down_smash']:
+                    self.speed[1] += self.skills['jump']*self.skills['down_smash']  # Modifier speed vertical when down
+                    if self.speed[1] > cf.max_vspeed:
+                        self.speed[1] = cf.max_vspeed
             elif vr.inputs[self.inputs['down']] and self.detectors[1].blocked:
                 self.speed[1] = 0
 
+            self.up_remember = vr.inputs[self.inputs['up']]
+
         # -- verification -- #
-        if self.detectors[0].blocked is True and self.speed[0] > 0:
-            self.speed[0] = 0
-        if self.detectors[4].blocked is True:
-            self.coord[0] += -3
-        if self.detectors[2].blocked is True and self.speed[0] < 0:
-            self.speed[0] = 0
-        if self.detectors[6].blocked is True:
-            self.coord[0] += 3
-        if self.detectors[3].blocked is True and self.speed[1] < 0:
-            self.speed[1] = 0
-        if self.detectors[7].blocked is True:
-            self.coord[1] += 3
-        if self.detectors[1].blocked is True and self.speed[1] > 0:
-            self.speed[1] = 0
-        if self.detectors[5].blocked is True:
-            self.coord[1] += -3
+        if self.detectors[0].blocked is True:
+            if self.speed[0] > 0:
+                self.speed[0] = 0
+            if self.detectors[4].blocked is True:
+                self.coord[0] += -2
+        if self.detectors[2].blocked is True:
+            if self.speed[0] < 0:
+                self.speed[0] = 0
+            if self.detectors[6].blocked is True:
+                self.coord[0] += 2
+        if self.detectors[3].blocked is True:
+            if self.speed[1] < 0:
+                self.speed[1] = 0
+            if self.detectors[7].blocked is True:
+                self.coord[1] += 2
+        if self.detectors[1].blocked is True:
+            if self.speed[1] > 0:
+                self.speed[1] = 0
+            if self.detectors[5].blocked is True:
+                self.coord[1] += -4
 
         # -- animations -- #
         if self.detectors[1].blocked is False and self.attack_time <= 0:

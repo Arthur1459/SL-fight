@@ -1,8 +1,13 @@
 Bug :
-Hitbox detection bug (melee attack down) # FIXED
-Collision, melee attack / projectile detected as solid (detector.state -> no diferences) # FIXED
+Hitbox detection bug (melee attack down)  # FIXED
+Collision, melee attack / projectile detected as solid (detector.state -> no diferences)  # FIXED
+Go throught the floor when down  # for mael (cadeau)  ->  new detector type -> detector specific
 
 Fix :
-Input freeze while attacking # FIXED
-Speed air # FIXED
+Input freeze while attacking  # FIXED
+Speed air  # FIXED
 Detector position/size  # FIXED
+Neutral orientation when nothing for attack   # FIXED
+Hitbox detector same size as character  # detector specific
+when press down in the air, speed stays increased  # FIXED
+visual independant of the hitbox   # FIXED

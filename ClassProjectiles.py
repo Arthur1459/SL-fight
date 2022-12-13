@@ -21,10 +21,7 @@ class projectile:
         self.special = special
         self.bounce, self.explode, self.repulsion = False, False, 0
         self.initSpecial()
-        if self.bounce or self.explode:
-            self.detectors = self.initDetectors()
-        else:
-            self.detectors = []
+        self.detectors = self.initDetectors()
         self.num = num
         return
 

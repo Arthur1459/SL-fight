@@ -15,7 +15,7 @@ class melee:
         self.orient = [orient[0], orient[1]]
         self.coord = [coordi[0] + cf.size_player[0] // (4 / 3) * self.orient[0],
                       coordi[1] + cf.size_player[1] // (4 / 3) * self.orient[1]]
-        if self.orient[1] != 0:
+        if self.orient[1] > 1/2 or self.orient[1] < -1/2:
             self.dimension = [dimension[1], dimension[0]]
         else:
             self.dimension = [dimension[0], dimension[1]]

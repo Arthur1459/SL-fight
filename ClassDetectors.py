@@ -58,6 +58,7 @@ class detector:
         self.data['repulsion'] = 0
         self.data['num'] = None
         self.data['instance'] = None
+        self.data['name'] = None
 
         self.state = False
         self.blocked = False
@@ -73,6 +74,7 @@ class detector:
                     self.data['colliding'] = 'solid'
                     self.data['num'] = vr.solids[key].num
                     self.data['instance'] = vr.solids[key].instance
+                    self.data['name'] = vr.solids[key].name
                     self.blocked = True
 
         for key in vr.events.keys():
@@ -86,6 +88,7 @@ class detector:
                         self.data['num'] = vr.events[key].get().num
                         self.data['instance'] = vr.events[key].get().instance
                         self.data['colliding'] = cf.attacks_type[self.collide_with]
+                        self.data['name'] = vr.solids[key].name
                     except:
                         pass
 

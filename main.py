@@ -1,6 +1,6 @@
 # SL-Fight main program
 # By Arthur1459 - Mael205 - Grasboulot
-# V0.3 - 12/12/22
+# V0.3.2 - 12/12/22
 
 import pygame
 import random as rd
@@ -20,7 +20,7 @@ def main():
     clock = pygame.time.Clock()
 
     player1 = ClassPlayer.Player('tit2', '1', [200, 200])
-    player2 = ClassPlayer.Player('arcane_mage', '2', [400, 200])
+    player2 = ClassPlayer.Player('chevalier', '2', [400, 200])
     players = [player1, player2]
     vr.players[str(player1.name)] = player1
     vr.players[str(player2.name)] = player2
@@ -65,7 +65,7 @@ def Calculation(elements):
 
     for key in vr.events.keys():
         vr.events[key].update()
-        if vr.events[key].get().duration < vr.time - vr.events[key].get().start_time:
+        if vr.events[key].get().duration < vr.time - vr.events[key].get().start_time or vr.events[key].state == 'dead':
             vr.events_del_keys.append(key)
     for key in vr.events_del_keys:
         try:
@@ -95,12 +95,12 @@ def DisplayUpdate(screen, fps, elements, back):
         draw_hitbox(screen, vr.solids[key].hitbox)
 
     for elt in elements[0]:
-        screen.blit(elt.visual, [elt.getx(), elt.gety()])
+        screen.blit(elt.visual, elt.getcoord_visual())
         for detector in elt.detectors:
             screen.blit(detector.visual, detector.coord_draw())
         pygame.draw.line(screen, "grey", elt.getCoordHealthBar()[0], [elt.getCoordHealthBar()[1][0] + elt.size[0], elt.getCoordHealthBar()[1][1]], 3)
         pygame.draw.line(screen, "red", elt.getCoordHealthBar()[0], [elt.getCoordHealthBar()[1][0] + elt.size[0]*((elt.getHealth()[0])/(elt.getHealth()[1])), elt.getCoordHealthBar()[1][1]], 3)
-        Text(str(elt.isInTheAir()), elt.coord, 20, "grey", screen)  # speed str(round(sqrt(elt.speed[0] ** 2 + elt.speed[1] ** 2), 3))
+        #Text(str(elt.isInTheAir()), elt.coord, 20, "grey", screen)  # speed str(round(sqrt(elt.speed[0] ** 2 + elt.speed[1] ** 2), 3))
 
     for key in vr.events.keys():
         try:
